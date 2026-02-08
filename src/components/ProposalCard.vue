@@ -22,12 +22,12 @@ function handleYes() {
 <template>
   <main class="proposal" role="main" aria-label="Valentine proposal">
     <!-- Card container -->
-    <div class="card">
+    <div class="card" data-avoid-overlap>
       <!-- Decorative top emoji -->
       <div class="card-emoji" aria-hidden="true">💌</div>
 
       <!-- Question -->
-      <h1 class="question" data-avoid-overlap>
+      <h1 class="question">
         {{ config.questionText }}
       </h1>
 
@@ -36,8 +36,8 @@ function handleYes() {
         {{ config.subtitleText }}
       </p>
 
-      <!-- Buttons row -->
-      <div class="buttons" data-avoid-overlap>
+      <!-- Yes button stays in the card -->
+      <div class="buttons">
         <button
           class="yes-btn"
           :class="{ 'is-pressed': yesPressed }"
@@ -47,9 +47,15 @@ function handleYes() {
           {{ config.yesButtonText }}
         </button>
 
+        <!-- No button placeholder: shown in-flow before first escape -->
         <RunawayButton />
       </div>
     </div>
+
+    <!--
+      Teleport the escaped No button to <body> so it's NOT inside
+      the card's backdrop-filter, which breaks position:fixed.
+    -->
   </main>
 </template>
 

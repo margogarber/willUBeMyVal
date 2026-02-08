@@ -1,11 +1,11 @@
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { config } from '../config.js'
 import { useRunawayPosition } from '../composables/useRunawayPosition.js'
 
 const emit = defineEmits(['escaped'])
 
-const { x, y, hasEscaped, attempts, escape, reset } = useRunawayPosition()
+const { x, y, hasEscaped, attempts, escape, reclamp, reset } = useRunawayPosition()
 
 /** DOM refs */
 const btnRef = ref(null)
@@ -22,7 +22,6 @@ const showHint = computed(() => attempts.value >= 10)
 
 /**
  * Collect rects of elements the button should not overlap.
- * We look for [data-avoid-overlap] elements in the parent.
  */
 function getAvoidRects() {
   const els = document.querySelectorAll('[data-avoid-overlap]')
@@ -30,16 +29,15 @@ function getAvoidRects() {
 }
 
 /**
- * Trigger escape! Called on multiple events for reliability.
+ * Trigger escape! Passes the button element so its real size is measured.
  */
 function runAway() {
-  escape(getAvoidRects())
+  escape(btnRef.value, getAvoidRects())
   emit('escaped')
 }
 
 /**
  * Transition duration gets shorter as attempts increase (progressive difficulty).
- * Starts at 400ms, minimum 100ms.
  */
 const transitionDuration = computed(() => {
   const base = 400
@@ -59,7 +57,6 @@ function handlePointerMove(e) {
   const cx = rect.left + rect.width / 2
   const cy = rect.top + rect.height / 2
 
-  // Threshold shrinks with attempts (harder to approach)
   const threshold = Math.max(100 - attempts.value * 5, 40)
 
   const dist = Math.hypot(e.clientX - cx, e.clientY - cy)
@@ -70,20 +67,31 @@ function handlePointerMove(e) {
 
 onMounted(() => {
   window.addEventListener('pointermove', handlePointerMove, { passive: true })
+  window.addEventListener('resize', reclamp, { passive: true })
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', reclamp, { passive: true })
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('pointermove', handlePointerMove)
+  window.removeEventListener('resize', reclamp)
+  if (window.visualViewport) {
+    window.visualViewport.removeEventListener('resize', reclamp)
+  }
   reset()
 })
 
-/** Expose reset for parent */
 defineExpose({ reset })
 </script>
 
 <template>
-  <div class="runaway-wrapper">
-    <!-- Button: either in-flow (initial) or positioned (after first escape) -->
+  <!--
+    Before first escape: button is in normal document flow (inside the card).
+    After escape: button teleports to <body> so position:fixed works correctly.
+    (backdrop-filter on the card breaks fixed positioning for children)
+  -->
+  <Teleport to="body" :disabled="!hasEscaped">
     <button
       ref="btnRef"
       class="no-btn"
@@ -95,6 +103,7 @@ defineExpose({ reset })
               left: `${x}px`,
               top: `${y}px`,
               transitionDuration,
+              zIndex: 9999,
             }
           : {}
       "
@@ -105,25 +114,20 @@ defineExpose({ reset })
     >
       {{ hasEscaped ? tauntText : config.noButtonText }}
     </button>
+  </Teleport>
 
-    <!-- Hint after many attempts -->
+  <!-- Hint after many attempts -->
+  <Teleport to="body">
     <Transition name="hint">
       <p v-if="showHint" class="hint-text" aria-live="polite">
         {{ config.hintText }}
       </p>
     </Transition>
-  </div>
+  </Teleport>
 </template>
 
-<style scoped>
-.runaway-wrapper {
-  position: relative;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
+<style>
+/* These styles are NOT scoped because the button teleports to <body> */
 .no-btn {
   display: inline-flex;
   align-items: center;
@@ -133,16 +137,26 @@ defineExpose({ reset })
   padding: 14px 28px;
   font-size: 1.1rem;
   font-weight: 700;
+  font-family: inherit;
   color: var(--red-700);
   background: var(--white);
+  border: none;
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition-property: left, top, transform, box-shadow;
   transition-timing-function: var(--ease-bounce);
   transition-duration: 400ms;
   user-select: none;
-  z-index: 10;
   white-space: nowrap;
+}
+
+.no-btn:focus-visible {
+  outline: 3px solid var(--white);
+  outline-offset: 3px;
 }
 
 .no-btn:hover {
@@ -151,11 +165,6 @@ defineExpose({ reset })
 
 .no-btn:active {
   animation: tapBounce 0.25s var(--ease-bounce);
-}
-
-.no-btn.is-escaped {
-  /* Override display when positioned */
-  pointer-events: auto;
 }
 
 /* ── Hint ─────────────────────────────────────────── */
@@ -171,7 +180,7 @@ defineExpose({ reset })
   font-size: 0.95rem;
   font-weight: 600;
   box-shadow: var(--shadow-soft);
-  z-index: 20;
+  z-index: 9999;
   white-space: nowrap;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
