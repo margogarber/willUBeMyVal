@@ -3,12 +3,12 @@ import { ref, readonly } from 'vue'
 /**
  * Composable: manages the runaway "No" button position.
  *
- * - Keeps the button within the visible playground container.
+ * - Keeps the button within a safe viewport area (margins from edges).
  * - Avoids overlapping with the "Yes" button and question text.
  * - Gets progressively faster/harder after each escape.
  */
 export function useRunawayPosition() {
-  /** Current button position relative to the container (px) */
+  /** Current button position (top-left, in px) */
   const x = ref(0)
   const y = ref(0)
 
@@ -18,12 +18,14 @@ export function useRunawayPosition() {
   /** Number of escape attempts */
   const attempts = ref(0)
 
+  /* Safe area margins (px) — keeps button away from edges & browser chrome */
+  const MARGIN_TOP = 100
+  const MARGIN_BOTTOM = 80
+  const MARGIN_X = 20
+
   /** Button approximate size */
   const BTN_W = 130
   const BTN_H = 52
-
-  /** Inner padding inside the container */
-  const PAD_INNER = 8
 
   /**
    * Check if two rectangles overlap.
@@ -38,60 +40,58 @@ export function useRunawayPosition() {
   }
 
   /**
-   * Move button to a new random position within the container,
-   * avoiding overlap with the provided avoid-rects.
+   * Move button to a new random position that does not overlap
+   * with the provided avoid-rects (e.g., "Yes" button, question text).
    *
-   * @param {HTMLElement} containerEl - The playground container element
-   * @param {DOMRect[]} avoidRects - Rects to avoid overlapping (in viewport coords)
-   * @param {number} [maxRetries=30] - Max random attempts
+   * @param {DOMRect[]} avoidRects - Rects to avoid overlapping
+   * @param {number} [maxRetries=20] - Max random attempts before giving up
    */
-  function escape(containerEl, avoidRects = [], maxRetries = 30) {
-    if (!containerEl) return
+  function escape(avoidRects = [], maxRetries = 30) {
+    const vw = window.innerWidth
+    const vh = window.innerHeight
 
-    const box = containerEl.getBoundingClientRect()
+    const safeLeft = MARGIN_X
+    const safeTop = MARGIN_TOP
+    const safeRight = vw - MARGIN_X - BTN_W
+    const safeBottom = vh - MARGIN_BOTTOM - BTN_H
 
-    // Available range inside the container
-    const minX = PAD_INNER
-    const minY = PAD_INNER
-    const maxX = Math.max(box.width - BTN_W - PAD_INNER, PAD_INNER)
-    const maxY = Math.max(box.height - BTN_H - PAD_INNER, PAD_INNER)
-
-    const rangeX = Math.max(maxX - minX, 0)
-    const rangeY = Math.max(maxY - minY, 0)
+    // Don't allow negative ranges on very small screens
+    const rangeX = Math.max(safeRight - safeLeft, 0)
+    const rangeY = Math.max(safeBottom - safeTop, 0)
 
     let newX, newY
     let tries = 0
     let valid = false
 
     while (tries < maxRetries && !valid) {
-      newX = minX + Math.random() * rangeX
-      newY = minY + Math.random() * rangeY
+      newX = safeLeft + Math.random() * rangeX
+      newY = safeTop + Math.random() * rangeY
 
-      // Convert to viewport coords for overlap check
-      const btnViewport = {
-        left: box.left + newX,
-        top: box.top + newY,
-        right: box.left + newX + BTN_W,
-        bottom: box.top + newY + BTN_H,
+      const btnRect = {
+        left: newX,
+        top: newY,
+        right: newX + BTN_W,
+        bottom: newY + BTN_H,
       }
 
-      // Check overlap with all avoid-rects (with padding)
-      const AVOID_PAD = 12
+      // Check overlap with all avoid-rects (with some padding)
+      const PAD = 16
       valid = avoidRects.every((rect) => {
         const padded = {
-          left: rect.left - AVOID_PAD,
-          top: rect.top - AVOID_PAD,
-          right: rect.right + AVOID_PAD,
-          bottom: rect.bottom + AVOID_PAD,
+          left: rect.left - PAD,
+          top: rect.top - PAD,
+          right: rect.right + PAD,
+          bottom: rect.bottom + PAD,
         }
-        return !rectsOverlap(btnViewport, padded)
+        return !rectsOverlap(btnRect, padded)
       })
 
       tries++
     }
 
-    x.value = newX ?? minX
-    y.value = newY ?? minY
+    // Even if we couldn't find a perfect spot, use the last computed one
+    x.value = newX ?? safeLeft
+    y.value = newY ?? safeTop
     hasEscaped.value = true
     attempts.value++
   }

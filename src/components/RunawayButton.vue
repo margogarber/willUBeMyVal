@@ -1,12 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { config } from '../config.js'
 import { useRunawayPosition } from '../composables/useRunawayPosition.js'
-
-const props = defineProps({
-  /** Ref to the playground container element */
-  containerEl: { type: Object, default: null },
-})
 
 const emit = defineEmits(['escaped'])
 
@@ -27,6 +22,7 @@ const showHint = computed(() => attempts.value >= 10)
 
 /**
  * Collect rects of elements the button should not overlap.
+ * We look for [data-avoid-overlap] elements in the parent.
  */
 function getAvoidRects() {
   const els = document.querySelectorAll('[data-avoid-overlap]')
@@ -34,10 +30,10 @@ function getAvoidRects() {
 }
 
 /**
- * Trigger escape — now constrained to the container.
+ * Trigger escape! Called on multiple events for reliability.
  */
 function runAway() {
-  escape(props.containerEl, getAvoidRects())
+  escape(getAvoidRects())
   emit('escaped')
 }
 
@@ -87,7 +83,7 @@ defineExpose({ reset })
 
 <template>
   <div class="runaway-wrapper">
-    <!-- Button: in-flow (initial) or absolutely positioned inside container -->
+    <!-- Button: either in-flow (initial) or positioned (after first escape) -->
     <button
       ref="btnRef"
       class="no-btn"
@@ -95,7 +91,7 @@ defineExpose({ reset })
       :style="
         hasEscaped
           ? {
-              position: 'absolute',
+              position: 'fixed',
               left: `${x}px`,
               top: `${y}px`,
               transitionDuration,
@@ -158,6 +154,7 @@ defineExpose({ reset })
 }
 
 .no-btn.is-escaped {
+  /* Override display when positioned */
   pointer-events: auto;
 }
 
