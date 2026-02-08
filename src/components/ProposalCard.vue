@@ -7,6 +7,9 @@ const emit = defineEmits(['yes'])
 
 const yesPressed = ref(false)
 
+/** Ref to the playground container where the No button bounces */
+const playgroundRef = ref(null)
+
 /** "Yes" button with scale-bounce feedback */
 function handleYes() {
   if (yesPressed.value) return
@@ -21,33 +24,37 @@ function handleYes() {
 
 <template>
   <main class="proposal" role="main" aria-label="Valentine proposal">
-    <!-- Card container -->
-    <div class="card">
-      <!-- Decorative top emoji -->
-      <div class="card-emoji" aria-hidden="true">💌</div>
+    <!-- Playground: visible box where the No button bounces -->
+    <div ref="playgroundRef" class="playground">
+      <!-- Card sits inside the playground -->
+      <div class="card" data-avoid-overlap>
+        <!-- Decorative top emoji -->
+        <div class="card-emoji" aria-hidden="true">💌</div>
 
-      <!-- Question -->
-      <h1 class="question" data-avoid-overlap>
-        {{ config.questionText }}
-      </h1>
+        <!-- Question -->
+        <h1 class="question">
+          {{ config.questionText }}
+        </h1>
 
-      <!-- Playful subtitle / instructions -->
-      <p class="subtitle">
-        {{ config.subtitleText }}
-      </p>
+        <!-- Playful subtitle / instructions -->
+        <p class="subtitle">
+          {{ config.subtitleText }}
+        </p>
 
-      <!-- Buttons row -->
-      <div class="buttons" data-avoid-overlap>
-        <button
-          class="yes-btn"
-          :class="{ 'is-pressed': yesPressed }"
-          :aria-label="config.yesButtonText"
-          @click="handleYes"
-        >
-          {{ config.yesButtonText }}
-        </button>
+        <!-- Yes button stays in the card -->
+        <div class="buttons">
+          <button
+            class="yes-btn"
+            :class="{ 'is-pressed': yesPressed }"
+            :aria-label="config.yesButtonText"
+            @click="handleYes"
+          >
+            {{ config.yesButtonText }}
+          </button>
 
-        <RunawayButton />
+          <!-- No button (in-flow initially, then flies inside playground) -->
+          <RunawayButton :container-el="playgroundRef" />
+        </div>
       </div>
     </div>
   </main>
@@ -62,9 +69,25 @@ function handleYes() {
   justify-content: center;
   width: 100%;
   min-height: 100dvh;
-  padding: 24px 16px;
-  padding-top: calc(24px + var(--safe-top));
-  padding-bottom: calc(24px + var(--safe-bottom));
+  padding: 12px;
+  padding-top: calc(12px + var(--safe-top));
+  padding-bottom: calc(12px + var(--safe-bottom));
+}
+
+/* ── Playground: visible bounded area ────────────── */
+.playground {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  /* Take most of the viewport height, minus safe margins */
+  height: calc(100dvh - 24px - var(--safe-top) - var(--safe-bottom));
+  max-height: 750px;
+  border: 2px dashed var(--white-alpha-50);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 /* ── Card ──────────────────────────────────────────── */
@@ -75,11 +98,14 @@ function handleYes() {
   border: 1px solid var(--white-alpha-20);
   border-radius: var(--radius-lg);
   padding: 40px 28px 36px;
-  max-width: 400px;
-  width: 100%;
+  max-width: 360px;
+  width: calc(100% - 24px);
   text-align: center;
   animation: popIn 0.6s var(--ease-bounce) both;
   box-shadow: var(--shadow-soft);
+  /* Keep card above the bouncing button */
+  position: relative;
+  z-index: 5;
 }
 
 .card-emoji {
