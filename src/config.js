@@ -7,7 +7,7 @@ export const config = {
   /* ── Proposal Screen ──────────────────────────── */
   questionText: 'Will you be my Valentine?',
   // Playful subtitle shown below the question
-  subtitleText: 'Put your finger down and try to catch the "No" button… good luck 😏👆',
+  subtitleText: 'Try to catch the "No" button… good luck 😏👆',
   yesButtonText: 'Yes 💖',
   noButtonText: 'No 😤',
 
@@ -24,6 +24,15 @@ export const config = {
     'Nuh-uh 💅',
     'Try again~ 😜',
     'So close! 🤭',
+    'Not a chance! 🤨',
+    'Are you for real? 🤔',
+    'You must be joking! 😂',
+    'Not even close! 😅',
+    'Way off the mark! 🤣',
+    'Not even a chance! 😭',
+    'You\'re dreaming! 😴',
+    'Not even close! 😅',
+    'Way off the mark! 🤣',
   ],
 
   // Shown after 10+ failed attempts
@@ -32,7 +41,7 @@ export const config = {
   /* ── Success / Celebration Screen ──────────────── */
   successTitle: 'YAY! Date secured 💘',
   successSubtitle: 'I knew you\'d say yes! 😻',
-  replayButtonText: 'Play again? 🔄',
+  replayButtonText: 'Play again? 😏',
 
   /* ── Cat Stickers on Success Screen ────────────── */
   // Emoji fallback cats used when images aren't available
