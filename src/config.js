@@ -15,37 +15,32 @@ export const config = {
   // Shown after each escape attempt, cycles through
   noTaunts: [
     'Nope 😼',
-    'Nice try 😏',
-    'Too slow! 🐱',
+    'Too slow for a soldier! 🐱',
     'Hehe 😸',
     'Can\'t catch me! 🏃',
     'Not today! 😹',
     'Almost! 🙈',
     'Nuh-uh 💅',
     'Try again~ 😜',
-    'So close! 🤭',
-    'Not a chance! 🤨',
-    'Are you for real? 🤔',
+    'Wrong answer! 🤨',
+    'Are you a soldier? 🤔',
     'You must be joking! 😂',
+    'IDF has to see this! 😅',
     'Not even close! 😅',
-    'Way off the mark! 🤣',
-    'Not even a chance! 😭',
-    'You\'re dreaming! 😴',
-    'Not even close! 😅',
-    'Way off the mark! 🤣',
+    'You wanna break my heart? 💔',
   ],
 
   // Shown after 10+ failed attempts
   hintText: 'Okay okay… just press YES 😭',
 
   /* ── Success / Celebration Screen ──────────────── */
-  successTitle: 'YAY! Date secured 💘',
+  successTitle: 'YAY! soldier is caught 💘',
   successSubtitle: 'I knew you\'d say yes! 😻',
   replayButtonText: 'Play again? 😏',
 
   /* ── Cat Stickers on Success Screen ────────────── */
   // Emoji fallback cats used when images aren't available
-  catEmojis: ['😺', '😸', '😻', '😽', '🐱', '😹', '🙀', '😿', '😾', '🐈'],
+  catEmojis: ['😺', '😸', '😻', '😽', '🐱', '😹', '🙀', '🐈'],
 
   // If you place images in /public/cats/, list filenames here.
   // Example: ['cat1.png', 'cat2.png']
