@@ -31,6 +31,11 @@ function handleYes() {
         {{ config.questionText }}
       </h1>
 
+      <!-- Playful subtitle / instructions -->
+      <p class="subtitle">
+        {{ config.subtitleText }}
+      </p>
+
       <!-- Buttons row -->
       <div class="buttons" data-avoid-overlap>
         <button
@@ -88,9 +93,20 @@ function handleYes() {
   font-size: clamp(1.5rem, 6vw, 2rem);
   font-weight: 800;
   line-height: 1.3;
-  margin-bottom: 32px;
+  margin-bottom: 10px;
   color: var(--white);
   text-shadow: 0 2px 12px rgba(136, 19, 55, 0.3);
+}
+
+/* ── Subtitle ─────────────────────────────────────── */
+.subtitle {
+  font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+  font-weight: 500;
+  color: var(--pink-200);
+  margin-bottom: 28px;
+  line-height: 1.4;
+  opacity: 0;
+  animation: fadeInUp 0.6s var(--ease-smooth) 0.4s both;
 }
 
 /* ── Buttons ─────────────────────────────────────── */

@@ -6,6 +6,8 @@
 export const config = {
   /* ── Proposal Screen ──────────────────────────── */
   questionText: 'Will you be my Valentine?',
+  // Playful subtitle shown below the question
+  subtitleText: 'Put your finger down and try to catch the "No" button… good luck 😏👆',
   yesButtonText: 'Yes 💖',
   noButtonText: 'No 😤',
 
